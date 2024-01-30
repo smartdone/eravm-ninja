@@ -7,6 +7,8 @@ from binaryninja import (LLIL_TEMP, Architecture, BinaryDataNotification,
                          LowLevelILLabel, LowLevelILOperation, RegisterInfo, log_info,
                          SegmentFlag, Symbol, SymbolType, log_debug, Settings, SettingsScope, log)
 
+from .eravmlib import disassemble_one, data_offset
+
 class EraVM(Architecture):
     name = "EraVM"
 
@@ -50,14 +52,33 @@ class EraVMView(BinaryView):
     def is_executable(self):
         return True
     
+    def read_content(self):
+        file_size = len(self.raw)
+        content_bytes = self.read(0, file_size)
+        log.log_info(f'content_bytes={content_bytes}')
+        log.log_info(f'byte type={type(content_bytes)}')
+
     def init(self):
         self.arch = Architecture['EraVM']
         self.platform = Architecture['EraVM'].standalone_platform
         self.max_function_size_for_analysis = 0
 
+        log.log_info(f'arch = {self.arch}')
+        log.log_info(f'platform = {self.platform}')
+
         file_size = len(self.raw)
 
         log.log_info(f'file_size={file_size}')
+
+        self.read_content()
+        
+        content_bytes = self.read(0, file_size)
+        log.log_info(f'content_bytes={content_bytes}')
+        log.log_info(f'byte type={type(content_bytes)}')
+
+        # add segment
+        df = data_offset(content_bytes, file_size)
+        log.log_info(f'df={df}')
 
     def get_entry_point(self):
         return 0

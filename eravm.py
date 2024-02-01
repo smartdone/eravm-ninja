@@ -27,7 +27,12 @@ class EraVM(Architecture):
 
     def get_instruction_info(self, data, addr):
         log.log_info(f'get_instruction_info data={data}, addr={addr}')
-        print(data, addr)
+        instruction = disassemble_one(addr)
+        print(instruction)
+        result = InstructionInfo()
+        result.length = 4
+
+        return result
 
     def get_instruction_text(self, data, addr):
         log.log_info(f'get_instruction_text data={data}, addr={addr}')
@@ -47,9 +52,11 @@ class EraVMView(BinaryView):
 
     @staticmethod
     def is_valid_for_data(data):
+        log.log_info(f'is_valid_for_data')
         return data.file.original_filename.endswith('.eravm')
     
     def is_executable(self):
+        log.log_info(f'is_executable')
         return True
     
     def read_content(self):
@@ -72,13 +79,23 @@ class EraVMView(BinaryView):
 
         self.read_content()
         
-        content_bytes = self.read(0, file_size)
-        log.log_info(f'content_bytes={content_bytes}')
-        log.log_info(f'byte type={type(content_bytes)}')
+        content_bytes = self.raw.read(0, file_size)
 
         # add segment
         df = data_offset(content_bytes, file_size)
+        df = df * 4
         log.log_info(f'df={df}')
+        self.add_auto_segment(0, df, df, file_size-df, SegmentFlag.SegmentReadable | SegmentFlag.SegmentWritable | SegmentFlag.SegmentExecutable)
+
 
     def get_entry_point(self):
+        log.log_info(f'get_entry_point')
+        return 0
+    
+    def perform_is_executable(self):
+        log.log_info(f'perform_is_executable')
+        return True
+    
+    def perform_get_entry_point(self):
+        log.log_info(f'perform_get_entry_point')
         return 0
